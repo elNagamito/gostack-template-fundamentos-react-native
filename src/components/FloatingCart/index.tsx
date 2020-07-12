@@ -20,18 +20,30 @@ import { useCart } from '../../hooks/cart';
 
 const FloatingCart: React.FC = () => {
   const { products } = useCart();
-
   const navigation = useNavigation();
 
   const cartTotal = useMemo(() => {
-    // TODO RETURN THE SUM OF THE PRICE FROM ALL ITEMS IN THE CART
-
+    if (products.length >= 1) {
+      const itemPrices = products.map(product => {
+        const totalPrice = product.price * product.quantity;
+        return totalPrice;
+      });
+      const totalPrice = itemPrices.reduce((accum, current) => current + accum);
+      return formatValue(totalPrice);
+    }
     return formatValue(0);
   }, [products]);
 
   const totalItensInCart = useMemo(() => {
-    // TODO RETURN THE SUM OF THE QUANTITY OF THE PRODUCTS IN THE CART
-
+    if (products.length >= 1) {
+      const itemQuantities = products.map(product => {
+        return product.quantity;
+      });
+      const totalItens = itemQuantities.reduce(
+        (accum, current) => current + accum,
+      );
+      return totalItens;
+    }
     return 0;
   }, [products]);
 

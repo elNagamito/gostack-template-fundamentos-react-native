@@ -30,23 +30,90 @@ const CartProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     async function loadProducts(): Promise<void> {
-      // TODO LOAD ITEMS FROM ASYNC STORAGE
+      const currentCart = await AsyncStorage.getItem('@GoMarketPlace:cart');
+
+      if (currentCart) {
+        setProducts(JSON.parse(currentCart));
+      }
     }
 
     loadProducts();
   }, []);
 
-  const addToCart = useCallback(async product => {
-    // TODO ADD A NEW ITEM TO THE CART
-  }, []);
+  const addToCart = useCallback(
+    async product => {
+      const productsInCart = [...products];
+      const cartIndex = productsInCart.findIndex(
+        index => index.id === product.id,
+      );
+      if (cartIndex === -1) {
+        // Se o produto ainda não existe no carrinho, cria um novo registro no array
+        const addProductToCart: Product = {
+          id: product.id,
+          title: product.title,
+          image_url: product.image_url,
+          price: product.price,
+          quantity: 1,
+        };
+        productsInCart.push(addProductToCart);
+        setProducts([addProductToCart]);
+      } else {
+        // Se o produto já existe no carrinho, adiciona 1 à quantidade total
+        productsInCart[cartIndex].quantity += 1;
+      }
+      // adiciona produtos ao storage
+      await AsyncStorage.setItem(
+        '@GoMarketPlace:cart',
+        JSON.stringify(productsInCart),
+      );
+      setProducts(productsInCart);
+    },
+    [products],
+  );
 
-  const increment = useCallback(async id => {
-    // TODO INCREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+  const increment = useCallback(
+    async id => {
+      const productsInCart = [...products];
+      const cartIndex = productsInCart.findIndex(index => index.id === id);
+      if (cartIndex !== -1) {
+        productsInCart[cartIndex].quantity += 1;
+        const addedQuantity = productsInCart[cartIndex];
+        setProducts([addedQuantity]);
+      }
 
-  const decrement = useCallback(async id => {
-    // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+      // adiciona produtos ao storage
+      await AsyncStorage.setItem(
+        '@GoMarketPlace:cart',
+        JSON.stringify(productsInCart),
+      );
+      setProducts(productsInCart);
+    },
+    [products],
+  );
+
+  const decrement = useCallback(
+    async id => {
+      const productsInCart = [...products];
+      const cartIndex = productsInCart.findIndex(index => index.id === id);
+      if (cartIndex !== -1) {
+        if (productsInCart[cartIndex].quantity >= 2) {
+          productsInCart[cartIndex].quantity -= 1;
+          const removedQuantity = productsInCart[cartIndex];
+          setProducts([removedQuantity]);
+        } else {
+          productsInCart.splice(cartIndex, 1);
+        }
+      }
+
+      // adiciona produtos ao storage
+      await AsyncStorage.setItem(
+        '@GoMarketPlace:cart',
+        JSON.stringify(productsInCart),
+      );
+      setProducts(productsInCart);
+    },
+    [products],
+  );
 
   const value = React.useMemo(
     () => ({ addToCart, increment, decrement, products }),
